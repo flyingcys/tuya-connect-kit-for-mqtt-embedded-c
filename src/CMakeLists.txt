@@ -1,5 +1,5 @@
 # Include filepaths for source and include.
-include( ${LIBRARIES_DIR}/coreJSON/jsonFilePaths.cmake )
+# include( ${LIBRARIES_DIR}/coreJSON/jsonFilePaths.cmake )
 include( ${LINKSDK_DIRS}/tuyaFilePaths.cmake )
 
 # Add a library with the above sources

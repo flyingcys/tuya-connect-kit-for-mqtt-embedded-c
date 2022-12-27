@@ -7,7 +7,7 @@
 #include "tuya_endpoint.h"
 #include "system_interface.h"
 #include "http_client_interface.h"
-#include "core_json.h"
+// #include "core_json.h"
 #include "cJSON.h"
 #include "aes_inf.h"
 #include "uni_md5.h"
@@ -153,23 +153,41 @@ static int atop_response_data_decode(const char* key,
     int rt = OPRT_OK;
 
     // Variables used in this example.
-    JSONStatus_t result;
+    // JSONStatus_t result;
     const char query_key[] = "result";
     char * value;
     size_t value_length;
 
-    // Calling JSON_Validate() is not necessary if the document is guaranteed to be valid.
-    result = JSON_Validate( (const char*)input, ilen );
-    if( result != JSONSuccess ) {
-        TY_LOGE("JSON_Validate error");
-        return OPRT_CR_CJSON_ERR;
+    cJSON *root = NULL;
+    root = cJSON_Parse(input);
+    if(NULL == root) {
+        TY_LOGE("cJSON_Parse error:%s", input);
+        return OPRT_CJSON_PARSE_ERR;
     }
 
-    result = JSON_Search( (char*)input, ilen, query_key, sizeof(query_key) - 1, &value, &value_length );
-    if( result != JSONSuccess ) {
-        TY_LOGE("JSON_Search result not found");
-        return OPRT_CR_CJSON_ERR;
+    cJSON *cjson = cJSON_GetObjectItem(root, "result");
+    if(NULL == cjson) {
+        TY_LOGE("cJSON_GetObjectItem result key error");
+        cJSON_Delete(root);
+        root = NULL;
+        return OPRT_CJSON_GET_ERR;
     }
+    value = cjson->valuestring;
+    value_length = strlen(value);
+    printf("===========================%s Len:%d\r\n", value, value_length);
+
+    // Calling JSON_Validate() is not necessary if the document is guaranteed to be valid.
+    // result = JSON_Validate( (const char*)input, ilen );
+    // if( result != JSONSuccess ) {
+    //     TY_LOGE("JSON_Validate error");
+    //     return OPRT_CR_CJSON_ERR;
+    // }
+    
+    // result = JSON_Search( (char*)input, ilen, query_key, sizeof(query_key) - 1, &value, &value_length );
+    // if( result != JSONSuccess ) {
+    //     TY_LOGE("JSON_Search result not found");
+    //     return OPRT_CR_CJSON_ERR;
+    // }
     TY_LOGV("base64 encode result:\r\n%.*s", value_length, value);
 
     // base64 decode buffer
@@ -412,6 +430,7 @@ int atop_base_request(const atop_base_request_t* request, atop_base_response_t* 
         return OPRT_MALLOC_FAILED;
     }
 
+    printf("===============================\r\n [body_length:]%d\r\n body:%s", http_response.body_length, http_response.body);
     /* Decoded response data */
     rt = atop_response_data_decode( request->key, 
                                     http_response.body, http_response.body_length,
