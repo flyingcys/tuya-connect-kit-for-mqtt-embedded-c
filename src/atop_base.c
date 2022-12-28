@@ -176,6 +176,9 @@ static int atop_response_data_decode(const char* key,
     value_length = strlen(value);
     printf("===========================%s Len:%d\r\n", value, value_length);
 
+    cJSON_Delete(root);
+    root = NULL;
+    
     // Calling JSON_Validate() is not necessary if the document is guaranteed to be valid.
     // result = JSON_Validate( (const char*)input, ilen );
     // if( result != JSONSuccess ) {
